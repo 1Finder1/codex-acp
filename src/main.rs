@@ -5,7 +5,7 @@ use codex_acp::{
 
 use agent_client_protocol::{AgentSideConnection, Client, Error};
 use anyhow::{Result, bail};
-use codex_core::config::{self, Config, ConfigOverrides};
+use codex_core::config::{self, Config};
 use std::env;
 use tokio::{
     io,
@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
         // - We reuse config.codex_home instead of calling find_codex_home() twice
         // - We take ownership of profiles instead of cloning
         // - Future: codex_core could expose profiles from Config to eliminate second load
-        let config = Config::load_with_cli_overrides(vec![], ConfigOverrides::default()).await?;
+        let config = Config::load_with_cli_overrides(vec![]).await?;
         let config_toml = config::load_config_as_toml_with_cli_overrides(
             &config.codex_home,
             vec![],

@@ -175,7 +175,8 @@ pub fn current_mode_id_for_config(config: &Config) -> Option<SessionModeId> {
     APPROVAL_PRESETS
         .iter()
         .find(|preset| {
-            preset.approval == config.approval_policy && preset.sandbox == config.sandbox_policy
+            preset.approval == config.approval_policy.value()
+                && preset.sandbox == config.sandbox_policy
         })
         .map(|preset| SessionModeId::new(preset.id))
 }

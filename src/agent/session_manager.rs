@@ -49,7 +49,7 @@ impl SessionState {
         Self {
             fs_session_id,
             conversation,
-            current_approval: config.approval_policy,
+            current_approval: config.approval_policy.value(),
             current_sandbox: config.sandbox_policy.clone(),
             current_mode,
             current_model: Some(format!("{}@{}", provider_id, model_name)),
