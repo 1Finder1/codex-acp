@@ -109,7 +109,7 @@ pub fn display_fs_path(cwd: &Path, raw_path: &str) -> String {
 
     path.file_name()
         .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_else(|| raw_path.to_string())
+        .unwrap_or_else(|| raw_path.to_owned())
 }
 
 /// Extract FS tool metadata from an MCP invocation, when applicable.
@@ -125,7 +125,7 @@ pub fn fs_tool_metadata(invocation: &McpInvocation, cwd: &Path) -> Option<FsTool
     }
 
     let args = invocation.arguments.as_ref()?.as_object()?;
-    let path = args.get("path")?.as_str()?.to_string();
+    let path = args.get("path")?.as_str()?.to_owned();
     let line = args
         .get("line")
         .and_then(|value| value.as_u64())
@@ -176,7 +176,7 @@ pub fn current_mode_id_for_config(config: &Config) -> Option<SessionModeId> {
         .iter()
         .find(|preset| {
             preset.approval == config.approval_policy.value()
-                && preset.sandbox == config.sandbox_policy
+                && preset.sandbox == config.sandbox_policy.get().clone()
         })
         .map(|preset| SessionModeId::new(preset.id))
 }
@@ -197,11 +197,11 @@ pub fn available_modes() -> Vec<SessionMode> {
     APPROVAL_PRESETS
         .iter()
         .map(|preset| {
-            let mode = SessionMode::new(SessionModeId::new(preset.id), preset.label.to_string());
+            let mode = SessionMode::new(SessionModeId::new(preset.id), preset.label);
             if preset.description.is_empty() {
                 mode
             } else {
-                mode.description(preset.description.to_string())
+                mode.description(preset.description)
             }
         })
         .collect()
@@ -263,7 +263,7 @@ pub fn available_models_from_profiles(
             }
 
             candidates.push((
-                provider_id.clone(),
+                provider_id.as_str(),
                 (
                     provider_id.clone(),
                     model_name.clone(),
@@ -274,7 +274,7 @@ pub fn available_models_from_profiles(
     }
 
     // Sort by provider id then model name for stable output.
-    candidates.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.1.cmp(&b.1.1)));
+    candidates.sort_by(|a, b| a.0.cmp(b.0).then_with(|| a.1.1.cmp(&b.1.1)));
 
     for (_provider, (provider_id, model_name, _effort)) in candidates {
         let model_id = format!("{}@{}", provider_id, model_name);
@@ -299,7 +299,7 @@ pub fn parse_and_validate_model(
     let id_str = model_id.0.as_ref();
     let (provider_id, model_name) = id_str
         .split_once('@')
-        .map(|(p, m)| (p.to_string(), m.to_string()))?;
+        .map(|(p, m)| (p.to_owned(), m.to_owned()))?;
 
     // Validate that the provider exists
     if !config.model_providers.contains_key(&provider_id) {

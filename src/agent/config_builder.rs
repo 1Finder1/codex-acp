@@ -25,16 +25,13 @@ impl CodexAgent {
         })?;
 
         let mut env = HashMap::new();
-        env.insert(
-            "ACP_FS_BRIDGE_ADDR".to_string(),
-            bridge.address().to_string(),
-        );
-        env.insert("ACP_FS_SESSION_ID".to_string(), session_id.to_string());
+        env.insert("ACP_FS_BRIDGE_ADDR".into(), bridge.address().to_string());
+        env.insert("ACP_FS_SESSION_ID".into(), session_id.to_owned());
 
         Ok(McpServerConfig {
             transport: McpServerTransportConfig::Stdio {
                 command: exe_path.to_string_lossy().into_owned(),
-                args: vec!["--acp-fs-mcp".to_string()],
+                args: vec!["--acp-fs-mcp".into()],
                 env: Some(env),
                 env_vars: vec![],
                 cwd: None,
@@ -47,12 +44,12 @@ impl CodexAgent {
                 let caps = self.session_manager.client_capabilities();
                 let mut v: Vec<String> = Vec::new();
                 if !caps.fs.read_text_file {
-                    v.push("read_text_file".to_string());
+                    v.push("read_text_file".into());
                 }
                 if !caps.fs.write_text_file {
-                    v.push("write_text_file".to_string());
-                    v.push("edit_text_file".to_string());
-                    v.push("multi_edit_text_file".to_string());
+                    v.push("write_text_file".into());
+                    v.push("edit_text_file".into());
+                    v.push("multi_edit_text_file".into());
                 }
                 if v.is_empty() { None } else { Some(v) }
             },

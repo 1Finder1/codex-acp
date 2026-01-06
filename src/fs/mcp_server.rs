@@ -7,7 +7,7 @@ use std::{
     },
 };
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use diffy::{PatchFormatter, create_patch};
 use rmcp::{
     ErrorData as McpError, ServerHandler,
@@ -178,15 +178,15 @@ impl FsTools {
         });
 
         if truncated && let Some(obj) = meta.as_object_mut() {
-            obj.insert("next_line".to_string(), json!(end_line.saturating_add(1)));
+            obj.insert("next_line".into(), json!(end_line.saturating_add(1)));
         }
 
         if truncated_by_bytes && let Some(obj) = meta.as_object_mut() {
-            obj.insert("max_bytes".to_string(), json!(MAX_READ_BYTES));
+            obj.insert("max_bytes".into(), json!(MAX_READ_BYTES));
         }
 
         let mut meta_obj = Meta::new();
-        meta_obj.insert("codex_fs_read".to_string(), meta);
+        meta_obj.insert("codex_fs_read".into(), meta);
         let content = RawContent::Text(RawTextContent {
             text,
             meta: Some(meta_obj),
@@ -310,9 +310,9 @@ impl ServerHandler for FsTools {
             protocol_version: ProtocolVersion::default(),
             capabilities: caps,
             server_info: Implementation {
-                name: "codex-acp-fs".to_string(),
-                title: Some("Codex ACP Filesystem".to_string()),
-                version: env!("CARGO_PKG_VERSION").to_string(),
+                name: "codex-acp-fs".into(),
+                title: Some("Codex ACP Filesystem".into()),
+                version: env!("CARGO_PKG_VERSION").into(),
                 icons: None,
                 website_url: None,
             },
@@ -429,7 +429,7 @@ async fn stage_edits(
         )
     })?;
 
-    staged_edits.stage(path.to_string(), write_content).await;
+    staged_edits.stage(path.to_owned(), write_content).await;
     info!(file = %path, bytes = staged_bytes, "Staged edits committed");
 
     let (new_ranges, old_ranges) = parse_diff_line_ranges(&diff_text);
@@ -440,7 +440,7 @@ async fn stage_edits(
     });
 
     let mut meta_obj = Meta::new();
-    meta_obj.insert("codex_fs_diff".to_string(), diff_meta);
+    meta_obj.insert("codex_fs_diff".into(), diff_meta);
     let diff_content = RawContent::Text(RawTextContent {
         text: diff_text,
         meta: Some(meta_obj),
@@ -453,27 +453,25 @@ async fn stage_edits(
 }
 
 fn apply_edits(base: &str, edits: &[EditInstruction]) -> Result<String> {
-    let mut content = base.to_string();
+    let mut content = base.to_owned();
     for edit in edits {
         if edit.old_text.is_empty() {
-            return Err(anyhow!(
-                "the provided `old_string` is empty. No edits were applied."
-            ));
+            bail!("the provided `old_string` is empty. No edits were applied.")
         }
 
         if edit.replace_all {
             let replaced = content.replace(&edit.old_text, &edit.new_text);
             if replaced == content {
-                return Err(anyhow!(
+                bail!(
                     "The provided `old_string` does not appear in the file. No edits were applied."
-                ));
+                )
             }
             content = replaced;
         } else {
             let Some(index) = content.find(&edit.old_text) else {
-                return Err(anyhow!(
+                bail!(
                     "The provided `old_string` does not appear in the file. No edits were applied."
-                ));
+                )
             };
             let end = index + edit.old_text.len();
             content.replace_range(index..end, &edit.new_text);

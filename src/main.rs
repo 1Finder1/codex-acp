@@ -6,6 +6,7 @@ use codex_acp::{
 use agent_client_protocol::{AgentSideConnection, Client, Error};
 use anyhow::{Result, bail};
 use codex_core::config::{self, Config};
+use codex_utils_absolute_path::AbsolutePathBuf;
 use std::env;
 use tokio::{
     io,
@@ -31,21 +32,21 @@ async fn main() -> Result<()> {
         let (tx, mut rx) = mpsc::unbounded_channel();
         let (client_tx, mut client_rx) = mpsc::unbounded_channel();
 
-        // Config loading strategy:
-        // 1. Load Config first (contains resolved runtime settings)
-        // 2. Load ConfigToml to extract profiles (needed for model/mode switching)
-        //
-        // NOTE: This results in two file reads/parses. Optimizations:
-        // - We reuse config.codex_home instead of calling find_codex_home() twice
-        // - We take ownership of profiles instead of cloning
-        // - Future: codex_core could expose profiles from Config to eliminate second load
+        // Load config and profiles in a single pass to avoid redundant I/O.
+        // We load the TOML first to get profiles, then construct Config from it.
         let config = Config::load_with_cli_overrides(vec![]).await?;
+        let cwd_abs = AbsolutePathBuf::from_absolute_path(&config.cwd)
+            .map_err(|e| anyhow::anyhow!("failed to resolve absolute path for cwd: {}", e))?;
+
         let config_toml = config::load_config_as_toml_with_cli_overrides(
             &config.codex_home,
+            &cwd_abs,
             vec![],
         ).await?;
+
         let profiles = config_toml.profiles;
-        let fs_bridge = FsBridge::start(client_tx.clone(), config.cwd.clone()).await?;
+        let cwd_path = config.cwd.clone();
+        let fs_bridge = FsBridge::start(client_tx.clone(), cwd_path).await?;
         let agent = CodexAgent::with_config(tx, client_tx, config, profiles, Some(fs_bridge));
         let session_manager = agent.session_manager().clone();
         let (conn, handle_io) = AgentSideConnection::new(agent, outgoing, incoming, |fut| {

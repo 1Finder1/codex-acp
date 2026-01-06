@@ -33,7 +33,7 @@ impl CodexAgent {
     pub(super) async fn prompt(&self, args: PromptRequest) -> Result<PromptResponse, Error> {
         info!(?args, "Received prompt request");
         let event_handler = EventHandler::new(
-            self.config.cwd.clone(),
+            self.config.cwd.clone(), // Required: EventHandler stores PathBuf
             self.session_manager.support_terminal(),
         );
         let mut reason = ReasoningAggregator::new();
@@ -97,7 +97,10 @@ impl CodexAgent {
 
         let op = match op_opt {
             Some(op) => op,
-            None => Op::UserInput { items },
+            None => Op::UserInput {
+                items,
+                final_output_json_schema: None,
+            },
         };
 
         // Enqueue work and then stream corresponding events back as ACP updates.
@@ -148,7 +151,7 @@ impl CodexAgent {
                         && !text.trim().is_empty()
                     {
                         self.session_manager
-                            .send_thought_chunk(&args.session_id, text.clone().into())
+                            .send_thought_chunk(&args.session_id, text.into())
                             .await?;
                     }
                 }
@@ -361,6 +364,7 @@ impl CodexAgent {
                 | EventMsg::StreamError(StreamErrorEvent {
                     message,
                     codex_error_info: _,
+                    additional_details: _,
                 }) => {
                     let mut msg = String::from(&message);
                     msg.push_str("\n\n");

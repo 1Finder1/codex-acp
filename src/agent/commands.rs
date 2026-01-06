@@ -19,6 +19,7 @@ impl CodexAgent {
                     items: vec![UserInput::Text {
                         text: prompt.into(),
                     }],
+                    final_output_json_schema: None,
                 })
             }
             "status" => {

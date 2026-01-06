@@ -279,12 +279,14 @@ impl FsBridgeInner {
             Some(start_line) => {
                 let start = start_line.saturating_sub(1) as usize;
                 let count = limit.unwrap_or(u32::MAX) as usize;
-                let lines: Vec<&str> = content.lines().collect();
-                if start >= lines.len() {
+
+                // Efficient line slicing: skip + take to avoid collecting all lines
+                let selected_lines: Vec<&str> = content.lines().skip(start).take(count).collect();
+
+                if selected_lines.is_empty() {
                     Ok(String::new())
                 } else {
-                    let end = (start + count).min(lines.len());
-                    Ok(lines[start..end].join("\n"))
+                    Ok(selected_lines.join("\n"))
                 }
             }
             None => Ok(content),

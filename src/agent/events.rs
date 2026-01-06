@@ -111,7 +111,7 @@ impl EventHandler {
             )))];
             let mut meta_map = serde_json::Map::new();
             meta_map.insert(
-                "terminal_info".to_string(),
+                "terminal_info".into(),
                 json!({
                     "terminal_id": call_id,
                     "cwd": cwd
@@ -230,7 +230,7 @@ impl EventHandler {
                 }
                 FileChange::Delete { content } => {
                     contents.push(ToolCallContent::from(
-                        Diff::new(PathBuf::from(path), "".to_string()).old_text(content.clone()),
+                        Diff::new(PathBuf::from(path), String::new()).old_text(content.clone()),
                     ));
                 }
                 FileChange::Update { unified_diff, .. } => {
@@ -243,7 +243,7 @@ impl EventHandler {
         }
 
         let title = if changes.len() == 1 {
-            "Apply changes".to_string()
+            String::from("Apply changes")
         } else {
             format!("Edit {} files", changes.len())
         };
