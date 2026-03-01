@@ -215,18 +215,18 @@ pub fn is_custom_provider(provider_id: &str) -> bool {
 /// Return the current model ID from config.
 pub fn current_model_id_from_config(config: &Config) -> ModelId {
     let model_name = config.model.as_deref().unwrap_or_default();
-    ModelId::new(format!("{}@{}", config.model_provider_id, model_name))
+    ModelId::new(format!("{}", model_name))
 }
 
 /// Build a `ModelInfo` for display to the client.
 fn build_model_info(config: &Config, provider_id: &str, model_name: &str) -> Option<ModelInfo> {
     let provider_info = config.model_providers.get(provider_id)?;
-    let model_id = format!("{}@{}", provider_id, model_name);
+    let model_id = format!("{}", model_name);
 
     Some(
         ModelInfo::new(
             ModelId::new(model_id),
-            format!("{}@{}", provider_info.name, model_name),
+            format!("{}", model_name),
         )
         .description(format!(
             "Provider: {}, Model: {}",
