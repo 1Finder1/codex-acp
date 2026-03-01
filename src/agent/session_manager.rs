@@ -52,7 +52,7 @@ impl SessionState {
             current_approval: config.approval_policy.value(),
             current_sandbox: config.sandbox_policy.get().clone(),
             current_mode,
-            current_model: Some(format!("{}@{}", provider_id, model_name)),
+            current_model: Some(format!("{}", model_name)),
             current_effort: config.model_reasoning_effort,
             token_usage: None,
         }

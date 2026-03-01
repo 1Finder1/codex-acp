@@ -425,12 +425,12 @@ impl CodexAgent {
                     cwd: None,
                     approval_policy: Some(state.current_approval),
                     sandbox_policy: Some(state.current_sandbox.clone()),
-                    model: Some(format!("{}@{}", provider_id, model_name)),
+                    model: Some(format!("{}", model_name)),
                     effort: Some(effort),
                     summary: None,
                 },
                 |state| {
-                    state.current_model = Some(format!("{}@{}", provider_id, model_name));
+                    state.current_model = Some(format!("{}", model_name));
                     state.current_effort = effort;
                 },
             )

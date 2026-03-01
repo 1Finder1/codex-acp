@@ -297,28 +297,13 @@ pub fn parse_and_validate_model(
     model_id: &ModelId,
 ) -> Option<(String, String, Option<ReasoningEffort>)> {
     let id_str = model_id.0.as_ref();
-    let (provider_id, model_name) = id_str
-        .split_once('@')
-        .map(|(p, m)| (p.to_owned(), m.to_owned()))?;
-
-    // Validate that the provider exists
-    if !config.model_providers.contains_key(&provider_id) {
-        return None;
-    }
-
-    // Check if this is the current config model
-    if provider_id == config.model_provider_id
-        && config.model.as_deref() == Some(model_name.as_str())
-    {
-        return Some((provider_id, model_name, config.model_reasoning_effort));
-    }
+    let model_name = id_str.to_owned();
 
     // Search in profiles for matching provider@model combination
     for profile in profiles.values() {
         if profile.model.as_ref() == Some(&model_name)
-            && profile.model_provider.as_ref() == Some(&provider_id)
         {
-            return Some((provider_id, model_name, profile.model_reasoning_effort));
+            return Some((profile.model_provider.clone().or(Some("".to_string())).unwrap(), model_name, profile.model_reasoning_effort));
         }
     }
 
