@@ -248,7 +248,7 @@ pub fn available_models_from_profiles(
         && let Some(model_name) = config.model.as_deref()
         && let Some(model_info) = build_model_info(config, &config.model_provider_id, model_name)
     {
-        seen.insert(format!("{}@{}", &config.model_provider_id, model_name));
+        seen.insert(format!("{}", model_name));
         models.push(model_info);
     }
 
@@ -277,7 +277,7 @@ pub fn available_models_from_profiles(
     candidates.sort_by(|a, b| a.0.cmp(b.0).then_with(|| a.1.1.cmp(&b.1.1)));
 
     for (_provider, (provider_id, model_name, _effort)) in candidates {
-        let model_id = format!("{}@{}", provider_id, model_name);
+        let model_id = format!("{}", model_name);
         if seen.contains(&model_id) {
             continue;
         }
