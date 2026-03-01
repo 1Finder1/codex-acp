@@ -13,7 +13,12 @@
 
         commonArgs = {
           src = ./.;
-          cargoLock.lockFile = ./Cargo.lock;
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+            outputHashes = {
+              "codex-api-0.0.0" = "sha256-RvkccCEXLDyX1PtDogqD4MSlug6om3m4CVSMaUJWWT8=";
+            };
+          };
           nativeBuildInputs = [ pkgs.pkg-config ];
           buildInputs = [ pkgs.openssl ];
         };
